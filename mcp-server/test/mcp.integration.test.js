@@ -120,3 +120,27 @@ test("MCP client discovers tools and calls the health check over Streamable HTTP
   assert.equal(health.endpoint, "/mcp");
   assert.equal(health.transport, "streamable-http");
 });
+
+test("compare_articles forwards text and comparison options to Symmetry", async () => {
+  const input = {
+    original_article_content: "Source article text.",
+    translated_article_content: "Translated article text.",
+    original_language: "en",
+    translated_language: "fr",
+    similarity_threshold: 0.82,
+    model_name: "sentence-transformers/LaBSE",
+  };
+  const result = await mcpClient.callTool({
+    name: "compare_articles",
+    arguments: input,
+  });
+
+  assert.equal(result.isError, undefined);
+  const response = JSON.parse(result.content[0].text);
+  assert.equal(response.path, "/symmetry/v1/articles/compare");
+  assert.deepEqual(response.body, input);
+  assert.deepEqual(backendRequests.at(-1), {
+    path: "/symmetry/v1/articles/compare",
+    body: input,
+  });
+});
