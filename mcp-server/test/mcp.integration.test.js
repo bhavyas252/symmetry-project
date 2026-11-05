@@ -144,3 +144,27 @@ test("compare_articles forwards text and comparison options to Symmetry", async 
     body: input,
   });
 });
+
+test("compare_article_sections forwards article queries and options to Symmetry", async () => {
+  const input = {
+    source_query: "https://en.wikipedia.org/wiki/Alpha",
+    target_query: "https://fr.wikipedia.org/wiki/Beta",
+    source_lang: "en",
+    target_lang: "fr",
+    similarity_threshold: 0.7,
+    model_name: "sentence-transformers/LaBSE",
+  };
+  const result = await mcpClient.callTool({
+    name: "compare_article_sections",
+    arguments: input,
+  });
+
+  assert.equal(result.isError, undefined);
+  const response = JSON.parse(result.content[0].text);
+  assert.equal(response.path, "/symmetry/v1/articles/compare-sections");
+  assert.deepEqual(response.body, input);
+  assert.deepEqual(backendRequests.at(-1), {
+    path: "/symmetry/v1/articles/compare-sections",
+    body: input,
+  });
+});
