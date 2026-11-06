@@ -65,8 +65,17 @@ before(async () => {
     const requestBody = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
     backendRequests.push({ path: request.url, body: requestBody });
 
-    response.writeHead(200, { "Content-Type": "application/json" });
-    response.end(JSON.stringify({ path: request.url, body: requestBody }));
+    const shouldFail = requestBody.original_article_content === "trigger-error";
+    response.writeHead(shouldFail ? 503 : 200, {
+      "Content-Type": "application/json",
+    });
+    response.end(
+      JSON.stringify(
+        shouldFail
+          ? { detail: "simulated backend failure" }
+          : { path: request.url, body: requestBody },
+      ),
+    );
   });
   const backendPort = await listen(backend);
 
@@ -167,4 +176,18 @@ test("compare_article_sections forwards article queries and options to Symmetry"
     path: "/symmetry/v1/articles/compare-sections",
     body: input,
   });
+});
+
+test("comparison tools report backend failures as MCP tool errors", async () => {
+  const result = await mcpClient.callTool({
+    name: "compare_articles",
+    arguments: {
+      original_article_content: "trigger-error",
+      translated_article_content: "Target article text.",
+    },
+  });
+
+  assert.equal(result.isError, true);
+  assert.match(result.content[0].text, /HTTP 503/);
+  assert.match(result.content[0].text, /simulated backend failure/);
 });

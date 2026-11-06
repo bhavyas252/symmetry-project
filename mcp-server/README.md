@@ -16,6 +16,10 @@ This project runs a Model Context Protocol (MCP) server over Streamable HTTP and
 
 Comparison tools call the Symmetry backend at `SYMMETRY_API_URL` (default `http://127.0.0.1:8000`). Start the backend before calling either comparison tool. The backend endpoints used are `/symmetry/v1/articles/compare` and `/symmetry/v1/articles/compare-sections`.
 
+## MCP client integration tests
+
+Run `npm test` to build the server and exercise it with the MCP SDK's Streamable HTTP client. The integration tests start the MCP server and a local mock backend, so a separately running Symmetry backend is not required.
+
 ## Quick start
 
 ```bash
